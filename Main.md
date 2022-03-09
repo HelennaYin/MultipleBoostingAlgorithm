@@ -1,6 +1,6 @@
 ## Multiple Boosting Algorithm
 
-In this project, I will create a multiple boosting algorithm and test its accuracy with cross-validated mean square error.
+In this project, I will create a multiple boosting algorithm. Then, it will be tested with a multi-dimension data set upon its accuracy with cross-validated mean square error.
 
 First, import the libraries we need to build this algorithm
 ```
