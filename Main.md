@@ -1,4 +1,8 @@
 ## Multiple Boosting Algorithm
+
+In this project, I will create a multiple boosting algorithm and test its accuracy with cross-validated mean square error.
+
+First, import the libraries we need to build this algorithm
 ```
 import numpy as np
 import pandas as pd
@@ -15,7 +19,7 @@ from sklearn.linear_model import LinearRegression, Lasso, Ridge, ElasticNet
 import matplotlib.pyplot as plt
 from matplotlib import pyplot
 ```
-First we need to build the base model. Here I chose locally weighted regression. 
+For the base model, I chose locally weighted regression. Tricubic will be used as the kernel for weighting.
 ```
 def Tricubic(x):
     if len(x.shape) == 1:
@@ -24,7 +28,7 @@ def Tricubic(x):
     d = np.sqrt(np.sum(x**2,axis=1))
     return np.where(d>1,0,70/81*(1-d**3)**3)
 ```
-
+The following chunk of code is the algorithm of locally weigthed regression.
 ```
 def lw_reg(X, y, xnew, kern, tau, intercept):
     n = len(X)
@@ -59,7 +63,7 @@ def lw_reg(X, y, xnew, kern, tau, intercept):
       output[np.isnan(output)] = g(xnew[np.isnan(output)])
     return output
 ```
-
+Next, I define the booster. Here I use nboost to specify the time of boosts it will excecutes.
 ```
 def booster(X,y,xnew,kern,tau,model_boosting,intercept,nboost):
   Fx = lw_reg(X,y,X,kern,tau,intercept) 
@@ -74,27 +78,27 @@ def booster(X,y,xnew,kern,tau,model_boosting,intercept,nboost):
     new_y = y - output
   return output_new
 ```
-
+Import the dataset to test this algorithm. 
 ```
 data = pd.read_csv('...path/concrete.csv')
 y = data['strength'].values
 X=data[['cement', 'water', 'coarseagg']].values
 ```
 
-
+Here, I want to analyze the performances of boosters build with random forest, linear regression and decision tree.
 ```
 scale = StandardScaler()
 RF = RandomForestRegressor(n_estimators=100,max_depth=3)
 LR = LinearRegression()
 DT = DecisionTreeRegressor()
 ```
-
+The following lines of code are used to find the cross-validated mean square error to see how accurate the model is when training with this dataset I just imported.  To lower the randomness of this approach, the algorithm will iterate over a set of values for random states and return the mean of MSE. 
 ```
 mse_RF = []
 mse_LR = []
 mse_DT = []
 for i in range(5):
-  kf = KFold(n_splits=10,shuffle=True,random_state=123)
+  kf = KFold(n_splits=10,shuffle=True,random_state=i)
   for idxtrain, idxtest in kf.split(X):
       xtrain = X[idxtrain]
       ytrain = y[idxtrain]
@@ -120,6 +124,9 @@ The Cross-validated Mean Squared Error for Booster of Linear Regression is : 177
 
 The Cross-validated Mean Squared Error for Booster of Decision Tree is : 178.5669109620586
 
+The results show that with 2 times of boosing, booster of random forest outperformed booster of linear regressiona and decision tree. 
+
+Next, I would also like to see the result of combining different boosters. Since random forest and linear regression was proved to be better at boosting on last algorithm, I will combine these two models. The following codes will execute random forest booster once and linear regression booster once. 
 ```
 def booster_plus(X,y,xnew,kern,tau,model_boosting1,model_boosting2,nboost, intercept):
   Fx = lw_reg(X,y,X,kern,tau,intercept) 
@@ -153,7 +160,10 @@ for i in range(5):
 print('The Cross-validated Mean Squared Error for new Booster: '+str(np.mean(mse_boostplus)))
 ```
 Output:
+
 The Cross-validated Mean Squared Error for new Booster: 177.80273388336892
+
+The new booster performed better the booster of linear regression, however, it is less accurate than booster of random forests. 
 
 ## LightGBM
 LightGBM stands for light gradient boosting. This algorithm has multiple advantages. LightGBM has been proven more accurate and less time-consuming in model training compared to other boosting algorithm. It is more compatible with large data set with multiple feature.
@@ -215,7 +225,7 @@ M =np.array(all_mse).reshape(10,11)
 print(np.min(M))
 print(np.where(M==np.min(M)))
 ```
-For the smallest MSE, we get 157.01283130985115. This is smaller than the previous multiple boosting algorithm, indicating this algorithm will provide a higher accuracy. 
+For the smallest MSE, we get **157.01283130985115**. This is smaller than the previous multiple boosting algorithm, indicating this algorithm will provide a higher accuracy. 
 Also, notice that light GBM took much less time to run.
 
 
