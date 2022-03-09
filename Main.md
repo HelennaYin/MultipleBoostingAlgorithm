@@ -1,3 +1,89 @@
+## Multiple Boosting Algorithm
+```
+import numpy as np
+import pandas as pd
+from scipy.linalg import lstsq
+from scipy.sparse.linalg import lsmr
+import matplotlib.pyplot as plt
+from scipy.interpolate import interp1d, griddata, LinearNDInterpolator, NearestNDInterpolator
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import KFold
+from sklearn.metrics import mean_squared_error as mse
+from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.linear_model import LinearRegression, Lasso, Ridge, ElasticNet
+import matplotlib.pyplot as plt
+from matplotlib import pyplot
+```
+First we need to build the base model. Here I chose locally weighted regression. 
+```
+def Tricubic(x):
+    if len(x.shape) == 1:
+      x = x.reshape(-1,1)
+
+    d = np.sqrt(np.sum(x**2,axis=1))
+    return np.where(d>1,0,70/81*(1-d**3)**3)
+```
+
+```
+def lw_reg(X, y, xnew, kern, tau, intercept):
+    n = len(X)
+    yest = np.zeros(n)
+
+    if len(y.shape)==1: # here we make column vectors
+      y = y.reshape(-1,1)
+
+    if len(X.shape)==1:
+      X = X.reshape(-1,1)
+
+    if intercept:
+      X1 = np.column_stack([np.ones((len(X),1)),X])
+    else:
+      X1 = X
+
+    w = np.array([kern((X - X[i])/(2*tau)) for i in range(n)])
+
+    for i in range(n):          
+        W = np.diag(w[:,i])
+        b = np.transpose(X1).dot(W).dot(y)
+        A = np.transpose(X1).dot(W).dot(X1)
+        beta, res, rnk, s = lstsq(A, b)
+        yest[i] = np.dot(X1[i],beta)
+    if X.shape[1]==1:
+      f = interp1d(X.flatten(),yest,fill_value='extrapolate')
+    else:
+      f = LinearNDInterpolator(X, yest)
+    output = f(xnew) 
+    if sum(np.isnan(output))>0:
+      g = NearestNDInterpolator(X,y.ravel()) 
+      output[np.isnan(output)] = g(xnew[np.isnan(output)])
+    return output
+```
+
+```
+def booster(X,y,xnew,kern,tau,model_boosting,intercept,nboost):
+  Fx = lw_reg(X,y,X,kern,tau,intercept) 
+  Fx_new = lw_reg(X,y,xnew,kern,tau,intercept)
+  new_y = y - Fx #that is our residual after we fit the first locally weighted regression model
+  output = Fx
+  output_new = Fx_new
+  for i in range(nboost):
+    model_boosting.fit(X,new_y)
+    output += model_boosting.predict(X)
+    output_new += model_boosting.predict(xnew)
+    new_y = y - output
+  return output_new
+```
+
+```
+data = pd.read_csv('...path/concrete.csv')
+y = data['strength'].values
+X=data[['cement', 'water', 'coarseagg']].values
+```
+
+
+
+
 
 
 ## LightGBM
