@@ -92,7 +92,7 @@ RF = RandomForestRegressor(n_estimators=100,max_depth=3)
 LR = LinearRegression()
 DT = DecisionTreeRegressor()
 ```
-The following lines of code are used to find the cross-validated mean square error to see how accurate the model is when training with this dataset I just imported.  To lower the randomness of this approach, the algorithm will iterate over a set of values for random states and return the mean of MSE. 
+The following lines of code are used to find the cross-validated mean square error to see how accurate the model is when training with this dataset I just imported. Each booster will will be boosted twice by the regressors. To lower the randomness of this approach, the algorithm will iterate over a set of values for random states and return the mean of MSE. 
 ```
 mse_RF = []
 mse_LR = []
@@ -118,11 +118,11 @@ print('The Cross-validated Mean Squared Error for Booster of Decision Tree is : 
 ```
 Outputs:
 
-The Cross-validated Mean Squared Error for Booster of Random Forest is : 177.6642440637544
+The Cross-validated Mean Squared Error for Booster of Random Forest is : **177.6642440637544**
 
-The Cross-validated Mean Squared Error for Booster of Linear Regression is : 177.89041085928847
+The Cross-validated Mean Squared Error for Booster of Linear Regression is : **177.89041085928847**
 
-The Cross-validated Mean Squared Error for Booster of Decision Tree is : 178.5669109620586
+The Cross-validated Mean Squared Error for Booster of Decision Tree is : **178.5669109620586**
 
 The results show that with 2 times of boosing, booster of random forest outperformed booster of linear regressiona and decision tree. 
 
@@ -161,7 +161,7 @@ print('The Cross-validated Mean Squared Error for new Booster: '+str(np.mean(mse
 ```
 Output:
 
-The Cross-validated Mean Squared Error for new Booster: 177.80273388336892
+The Cross-validated Mean Squared Error for new Booster: **177.80273388336892**
 
 The new booster performed better the booster of linear regression, however, it is less accurate than booster of random forests. 
 
