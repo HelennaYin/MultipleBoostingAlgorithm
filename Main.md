@@ -231,6 +231,7 @@ Also, notice that light GBM took much less time to run.
 
 
 References:
+
 Guolin Ke; Qi Meng; Thomas Finely; Taifeng Wang; Wei Chen; Weidong Ma; Qiwei Ye; Tie-Yan Liu (2017). "LightGBM: A Highly Efficient Gradient Boosting Decision Tree"
 
 https://www.kaggle.com/lasmith/house-price-regression-with-lightgbm#Light-GBM
