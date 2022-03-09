@@ -82,9 +82,78 @@ X=data[['cement', 'water', 'coarseagg']].values
 ```
 
 
+```
+scale = StandardScaler()
+RF = RandomForestRegressor(n_estimators=100,max_depth=3)
+LR = LinearRegression()
+DT = DecisionTreeRegressor()
+```
 
+```
+mse_RF = []
+mse_LR = []
+mse_DT = []
+for i in range(5):
+  kf = KFold(n_splits=10,shuffle=True,random_state=123)
+  for idxtrain, idxtest in kf.split(X):
+      xtrain = X[idxtrain]
+      ytrain = y[idxtrain]
+      ytest = y[idxtest]
+      xtest = X[idxtest]
+      xtrain = scale.fit_transform(xtrain)
+      xtest = scale.transform(xtest)
+      yhat_rf = boosted_lwr(xtrain,ytrain,xtest,Tricubic,0.1,True,RF,2)
+      yhat_lr = boosted_lwr(xtrain,ytrain,xtest,Tricubic,0.1,True,LR,2)
+      yhat_dt = boosted_lwr(xtrain,ytrain,xtest,Tricubic,0.1,True,DT,2)
+      mse_RF.append(mse(ytest,yhat_rf))
+      mse_LR.append(mse(ytest,yhat_lr))
+      mse_DT.append(mse(ytest,yhat_dt))
+print('The Cross-validated Mean Squared Error for Booster of Random Forest is : '+str(np.mean(mse_RF)))
+print('The Cross-validated Mean Squared Error for Booster of Linear Regression is : '+str(np.mean(mse_LR)))
+print('The Cross-validated Mean Squared Error for Booster of Decision Tree is : '+str(np.mean(mse_DT)))
+```
+Outputs:
 
+The Cross-validated Mean Squared Error for Booster of Random Forest is : 177.6642440637544
 
+The Cross-validated Mean Squared Error for Booster of Linear Regression is : 177.89041085928847
+
+The Cross-validated Mean Squared Error for Booster of Decision Tree is : 178.5669109620586
+
+```
+def booster_plus(X,y,xnew,kern,tau,model_boosting1,model_boosting2,nboost, intercept):
+  Fx = lw_reg(X,y,X,kern,tau,intercept) 
+  Fx_new = lw_reg(X,y,xnew,kern,tau,intercept)
+  new_y = y - Fx 
+  output = Fx
+  output_new = Fx_new
+  for i in range(nboost):
+    model_boosting1.fit(X,new_y)
+    output += model_boosting1.predict(X)
+    output_new += model_boosting1.predict(xnew)
+    new_y = y - output
+  for i in range(nboost):
+    model_boosting2.fit(X,new_y)
+    output += model_boosting2.predict(X)
+    output_new += model_boosting2.predict(xnew)
+    new_y = y-output
+  return output_new
+mse_boostplus = []
+for i in range(5):
+  kf = KFold(n_splits=10,shuffle=True,random_state=i)
+  for idxtrain, idxtest in kf.split(X):
+      xtrain = X[idxtrain]
+      ytrain = y[idxtrain]
+      ytest = y[idxtest]
+      xtest = X[idxtest]
+      xtrain = scale.fit_transform(xtrain)
+      xtest = scale.transform(xtest)
+      yhat = booster_plus(xtrain,ytrain,xtest,tricubic,LR,RF,1,True)
+      mse_boostplus.append(mse(ytest,yhat))
+print('The Cross-validated Mean Squared Error for new Booster: '+str(np.mean(mse_boostplus)))
+```
+Output:
+The Cross-validated Mean Squared Error for new Booster: 177.80273388336892
 
 ## LightGBM
 LightGBM stands for light gradient boosting. This algorithm has multiple advantages. LightGBM has been proven more accurate and less time-consuming in model training compared to other boosting algorithm. It is more compatible with large data set with multiple feature.
